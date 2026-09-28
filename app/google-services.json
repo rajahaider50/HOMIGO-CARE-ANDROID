@@ -2,8 +2,7 @@
   "project_info": {
     "project_number": "682545900180",
     "firebase_url": "https://homigo-care-76e21-default-rtdb.firebaseio.com",
-    "project_id": "homigo-care-76e21",
-    "storage_bucket": "homigo-care-76e21.firebasestorage.app"
+    "project_id": "homigo-care-76e21"
   },
   "client": [
     {
