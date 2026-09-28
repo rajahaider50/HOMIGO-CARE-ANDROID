@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "474833892214",
+    "project_id": "homigo-care-dev-76e21",
+    "storage_bucket": "homigo-care-dev-76e21.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:474833892214:android:75e4270d11dd3da7dcc057",
+        "android_client_info": {
+          "package_name": "pk.homigocare.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyC_KPALi_KP3DXxsU9xuax7oP99T-Pu5PM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
