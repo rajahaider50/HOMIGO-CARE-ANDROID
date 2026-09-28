@@ -11,4 +11,11 @@ The production Firebase Android app has both fingerprints registered. The develo
 
 ## Release keystore
 
-Do not commit the `.jks` file or passwords. After creating the release keystore in Termux, send only its SHA-1 and SHA-256 fingerprints. Register release fingerprints separately from debug fingerprints in both Firebase Android apps.
+The release fingerprints received from Termux are:
+
+- SHA-1: `1A:75:E4:5C:6E:D8:97:20:63:2F:5B:AD:7D:27:E0:49:F2:49:9F:FF`
+- SHA-256: `C4:22:65:AF:A1:61:65:8C:47:A1:00:A8:25:55:99:E6:A3:A9:8C:DB:03:BC:B1:39:7C:2A:CC:4B:C3:DE:81:23`
+
+Production Firebase has both release fingerprints registered. Development Firebase has the release SHA-256 registered. The MCP/API returned an error twice for the development release SHA-1, so add that one manually in Firebase Console if development Google Sign-In requires it.
+
+Do not commit the `.jks` file or passwords.
