@@ -1,5 +1,6 @@
 package pk.homigocare.android.auth
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -8,10 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -20,9 +19,14 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import pk.homigocare.android.R
+import pk.homigocare.android.designsystem.icons.HgIcon
+import pk.homigocare.android.designsystem.icons.HgIconImage
+import pk.homigocare.android.designsystem.theme.HgRadius
 
 @Composable
 fun AuthScreen(
@@ -43,36 +47,70 @@ fun AuthScreen(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 32.dp),
             verticalArrangement = Arrangement.Center,
         ) {
-            Text("HomiGo Care", style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text("Trusted care, delivered to your home.", style = MaterialTheme.typography.bodyLarge)
-            Spacer(Modifier.height(28.dp))
-            Text(if (isSignUp) "Create your patient account" else "Sign in to continue", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.SemiBold)
+            Image(
+                painter = painterResource(R.drawable.homigo_lockup_horizontal),
+                contentDescription = "HomiGo Care — Because Care Begins at Home",
+                modifier = Modifier.fillMaxWidth(0.92f).height(74.dp),
+                contentScale = ContentScale.Fit,
+            )
+            Spacer(Modifier.height(30.dp))
+            Text(
+                if (isSignUp) "Create your patient account" else "Sign in to continue",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
             Spacer(Modifier.height(20.dp))
             if (isSignUp) {
-                OutlinedTextField(value = name, onValueChange = onNameChange, label = { Text("Full name") }, singleLine = true, enabled = !loading, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = onNameChange,
+                    label = { Text("Full name") },
+                    leadingIcon = { HgIconImage(HgIcon.USER, contentDescription = null) },
+                    singleLine = true,
+                    enabled = !loading,
+                    shape = MaterialTheme.shapes.large,
+                    modifier = Modifier.fillMaxWidth().height(68.dp),
+                )
                 Spacer(Modifier.height(12.dp))
             }
-            OutlinedTextField(value = email, onValueChange = onEmailChange, label = { Text("Email address") }, singleLine = true, enabled = !loading, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = email,
+                onValueChange = onEmailChange,
+                label = { Text("Email address") },
+                leadingIcon = { HgIconImage(HgIcon.MESSAGE, contentDescription = null) },
+                singleLine = true,
+                enabled = !loading,
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().height(68.dp),
+            )
             Spacer(Modifier.height(12.dp))
-            OutlinedTextField(value = password, onValueChange = onPasswordChange, label = { Text("Password (at least 8 characters)") }, singleLine = true, enabled = !loading, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = password,
+                onValueChange = onPasswordChange,
+                label = { Text("Password (at least 8 characters)") },
+                leadingIcon = { HgIconImage(HgIcon.LOCK, contentDescription = null) },
+                singleLine = true,
+                enabled = !loading,
+                visualTransformation = PasswordVisualTransformation(),
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().height(68.dp),
+            )
             if (message != null) {
-                Spacer(Modifier.height(10.dp))
+                Spacer(Modifier.height(12.dp))
                 Text(message, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
             }
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(22.dp))
             Button(
                 onClick = onSubmit,
                 enabled = !loading,
-                shape = RoundedCornerShape(14.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
-                modifier = Modifier.fillMaxWidth().height(54.dp),
+                shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
             ) {
-                if (loading) CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.height(22.dp))
-                else Text(if (isSignUp) "Create account" else "Sign in")
+                if (loading) CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.height(22.dp), color = MaterialTheme.colorScheme.onPrimary)
+                else Text(if (isSignUp) "Create account" else "Sign in", style = MaterialTheme.typography.labelLarge)
             }
-            Spacer(Modifier.height(8.dp))
-            TextButton(onClick = { onModeChange(!isSignUp) }, enabled = !loading, modifier = Modifier.fillMaxWidth()) {
+            Spacer(Modifier.height(10.dp))
+            TextButton(onClick = { onModeChange(!isSignUp) }, enabled = !loading, modifier = Modifier.fillMaxWidth().height(HgRadius.Button * 2.2f)) {
                 Text(if (isSignUp) "Already registered? Sign in" else "New to HomiGo Care? Create an account")
             }
         }

@@ -1,36 +1,62 @@
 package pk.homigocare.android
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.lightColorScheme
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.ui.graphics.Color
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.delay
 import pk.homigocare.android.auth.AuthRepository
 import pk.homigocare.android.auth.AuthScreen
 import pk.homigocare.android.auth.EmailNotVerifiedException
+import pk.homigocare.android.designsystem.HomiGoSplashScreen
+import pk.homigocare.android.designsystem.icons.HgIcon
+import pk.homigocare.android.designsystem.icons.HgIconImage
+import pk.homigocare.android.designsystem.theme.HgColor
+import pk.homigocare.android.designsystem.theme.HgRadius
+import pk.homigocare.android.designsystem.theme.HomiGoTheme
 import pk.homigocare.android.home.HomeScreen
-
-private val PrimaryTeal = Color(0xFF1B6B63)
-private val Orange = Color(0xFFF5823A)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val auth = AuthRepository(FirebaseAuth.getInstance())
         setContent {
-            MaterialTheme(colorScheme = lightColorScheme(primary = PrimaryTeal, secondary = Orange)) {
+            HomiGoTheme {
+                var showSplash by remember { mutableStateOf(true) }
+                LaunchedEffect(Unit) {
+                    delay(1200)
+                    showSplash = false
+                }
                 var currentUser by remember { mutableStateOf(auth.currentUser()?.takeIf { it.isEmailVerified }) }
                 var pendingVerification by remember { mutableStateOf(auth.currentUser()?.takeIf { !it.isEmailVerified }) }
                 var isSignUp by remember { mutableStateOf(false) }
@@ -40,34 +66,56 @@ class MainActivity : ComponentActivity() {
                 var loading by remember { mutableStateOf(false) }
                 var message by remember { mutableStateOf<String?>(null) }
 
-                if (currentUser != null) {
-                    HomeScreen(name = currentUser?.displayName.orEmpty(), onSignOut = {
-                        auth.signOut(); currentUser = null; pendingVerification = null
-                        message = null; password = ""; isSignUp = false
-                    })
-                } else if (pendingVerification != null) {
-                    VerificationScreen(
+                when {
+                    showSplash -> HomiGoSplashScreen()
+                    currentUser != null -> HomeScreen(
+                        name = currentUser?.displayName.orEmpty(),
+                        onSignOut = {
+                            auth.signOut()
+                            currentUser = null
+                            pendingVerification = null
+                            message = null
+                            password = ""
+                            isSignUp = false
+                        },
+                        onEmergencyCall = {
+                            runCatching { startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:1122"))) }
+                        },
+                    )
+                    pendingVerification != null -> VerificationScreen(
                         account = pendingVerification!!,
                         loading = loading,
                         message = message,
                         onResend = {
-                            loading = true; message = null
+                            loading = true
+                            message = null
                             auth.resendVerification { result ->
                                 loading = false
-                                message = result.fold({ "Verification email sent. Check your inbox and spam folder." }, { it.localizedMessage ?: "Could not send verification email." })
+                                message = result.fold(
+                                    { "Verification email sent. Check your inbox and spam folder." },
+                                    { it.localizedMessage ?: "Could not send verification email." },
+                                )
                             }
                         },
                         onRefresh = {
-                            loading = true; message = null
+                            loading = true
+                            message = null
                             auth.refreshVerification { result ->
                                 loading = false
-                                result.fold({ currentUser = it; pendingVerification = null }, { message = it.localizedMessage })
+                                result.fold(
+                                    { currentUser = it; pendingVerification = null },
+                                    { message = it.localizedMessage ?: "Email is not verified yet. Open the email link and try again." },
+                                )
                             }
                         },
-                        onSignOut = { auth.signOut(); pendingVerification = null; message = null; isSignUp = false },
+                        onSignOut = {
+                            auth.signOut()
+                            pendingVerification = null
+                            message = null
+                            isSignUp = false
+                        },
                     )
-                } else {
-                    AuthScreen(
+                    else -> AuthScreen(
                         isSignUp = isSignUp,
                         name = name,
                         email = email,
@@ -85,8 +133,12 @@ class MainActivity : ComponentActivity() {
                                 password.length < 8 -> "Use a password with at least 8 characters."
                                 else -> null
                             }
-                            if (validation != null) { message = validation; return@AuthScreen }
-                            loading = true; message = null
+                            if (validation != null) {
+                                message = validation
+                                return@AuthScreen
+                            }
+                            loading = true
+                            message = null
                             val callback: (Result<FirebaseUser>) -> Unit = { result ->
                                 loading = false
                                 result.fold(
@@ -126,22 +178,48 @@ private fun VerificationScreen(
     onRefresh: () -> Unit,
     onSignOut: () -> Unit,
 ) {
-    androidx.compose.material3.Surface(modifier = androidx.compose.ui.Modifier.fillMaxSize()) {
-        androidx.compose.foundation.layout.Column(
-            modifier = androidx.compose.ui.Modifier.fillMaxSize().padding(24.dp),
-            verticalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
+    Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 32.dp),
+            verticalArrangement = Arrangement.Center,
         ) {
-            androidx.compose.material3.Text("Check your email", style = MaterialTheme.typography.headlineMedium, color = PrimaryTeal)
-            androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(12.dp))
-            androidx.compose.material3.Text("We sent a verification link to ${account.email.orEmpty()}. Verify your email before continuing.")
-            if (message != null) {
-                androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(12.dp))
-                androidx.compose.material3.Text(message, color = MaterialTheme.colorScheme.primary)
+            Image(
+                painter = painterResource(R.drawable.homigo_lockup_horizontal),
+                contentDescription = "HomiGo Care — Because Care Begins at Home",
+                modifier = Modifier.fillMaxWidth(0.9f).height(68.dp),
+                contentScale = ContentScale.Fit,
+            )
+            Spacer(Modifier.height(30.dp))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                HgIconImage(HgIcon.MESSAGE, modifier = Modifier.size(24.dp), contentDescription = null)
+                Text("Check your email", style = MaterialTheme.typography.headlineMedium, color = HgColor.PrimaryDark)
             }
-            androidx.compose.foundation.layout.Spacer(androidx.compose.ui.Modifier.height(20.dp))
-            androidx.compose.material3.Button(onClick = onRefresh, enabled = !loading, modifier = androidx.compose.ui.Modifier.fillMaxWidth()) { androidx.compose.material3.Text("I've verified my email") }
-            androidx.compose.material3.TextButton(onClick = onResend, enabled = !loading, modifier = androidx.compose.ui.Modifier.fillMaxWidth()) { androidx.compose.material3.Text("Resend verification email") }
-            androidx.compose.material3.TextButton(onClick = onSignOut, enabled = !loading, modifier = androidx.compose.ui.Modifier.fillMaxWidth()) { androidx.compose.material3.Text("Use a different account") }
+            Spacer(Modifier.height(12.dp))
+            Text(
+                "We sent a verification link to ${account.email.orEmpty()}. Verify your email before continuing.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (message != null) {
+                Spacer(Modifier.height(12.dp))
+                Text(message, color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.bodyMedium)
+            }
+            Spacer(Modifier.height(24.dp))
+            Button(
+                onClick = onRefresh,
+                enabled = !loading,
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                shape = MaterialTheme.shapes.large,
+            ) {
+                if (loading) CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                else Text("I've verified my email", style = MaterialTheme.typography.labelLarge)
+            }
+            TextButton(onClick = onResend, enabled = !loading, modifier = Modifier.fillMaxWidth().height(HgRadius.Button * 2.2f)) {
+                Text("Resend verification email")
+            }
+            OutlinedButton(onClick = onSignOut, enabled = !loading, modifier = Modifier.fillMaxWidth().height(56.dp), shape = MaterialTheme.shapes.large) {
+                Text("Use a different account")
+            }
         }
     }
 }
